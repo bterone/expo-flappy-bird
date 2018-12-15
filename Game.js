@@ -18,17 +18,88 @@ export default class Game extends React.Component {
   }
 
   onSetup = async ({ scene }) => {
-    // Give us global reference to the scene?
+    // Give us global reference to the scene
+    // Then the scene can be called by any other function
     this.scene = scene;
     await this.setupBackground();
+    await this.setupPlayer();
   };
 
   setupBackground = async () => {
-    // Doing some async stuff in this method
+    // Getting a reference to screen and screen size
+    const { scene } = this;
+    const { size } = scene;
+
+    // Passes the background image and name for referencing
+    const bg = await this.setupStaticNode({
+      image: Files.sprites.bg,
+      size,
+      name: 'bg',
+    });
+
+    // Adds background to scene
+    scene.add(bg);
   };
 
+  setupPlayer = async () => {
+    // Create the player display size
+    // Under the sprites/bird.png, there are 3 tiles. Display size is divided by 3 (108/3)
+    const size = {
+      width: 36,
+      height: 26,
+    };
+
+    // Creates a sprite with animation
+    // tilesHoriz: How many tiles across (3)
+    // tilesVert: Tiles vertical (1)
+    // numTiles: Total tiles (3)
+    // tilesDispDuration: Display duration
+    // Size defined previously
+    const sprite = new Sprite();
+    await sprite.setup({
+      image: Files.sprites.bird,
+      tilesHoriz: 3,
+      tilesVert: 1,
+      numTiles: 3,
+      tileDispDuration: 75,
+      size
+    });
+
+    this.player = new Node({
+      sprite
+    });
+    this.scene.add(this.player);
+  }
+
+  // Helper function that creates a static node containing the sprite
+  setupStaticNode = async ({ image, size, name }) => {
+    // Creates a new Sprite and sets image and size
+    const sprite = new Sprite();
+
+    await sprite.setup({
+      image,
+      size,
+    });
+
+    // Initializes a node with the Sprite and gives it a reference
+    const node = new Node({
+      sprite,
+    });
+    node.name = name;
+
+    return node;
+  };
+
+  gameStarted = false;
+
   updateGame = delta => {
-   
+    if (this.gameStarted) {
+      // To be continued
+    } else {
+      this.player.update(delta);
+      this.player.y = 8 * Math.cos(Date.now() / 200);
+      this.player.angle = 0
+    }
   };
 
   render() {
