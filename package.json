@@ -1,0 +1,18 @@
+{
+  "name": "flappy-bird-starter",
+  "version": "0.0.0",
+  "description": "No description",
+  "author": null,
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "dependencies": {
+    "expo": "^25.0.0",
+    "react": "16.0.0-beta.5",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-25.0.0.tar.gz",
+    "@expo/vector-icons": "5.2.0",
+    "expo-three": "2.0.2",
+    "prop-types": "15.6.0",
+    "react-native-elements": "0.17.0",
+    "three": "0.88.0"
+  }
+}
