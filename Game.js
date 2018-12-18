@@ -17,10 +17,49 @@ export default class Game extends React.Component {
   componentWillMount() {
   }
 
+  // Parent Node for all pipe nodes
+  pipes = new Group();
+  
+  // Holds all pipes that moved off screen for recycling
+  deadPipeTops = [];
+  deadPipeBottoms = [];
+
+  // Seeing if we should spawn a pipe or recycle
+  setupPipe = async ({ key, y }) => {
+
+  }
+  spawnPipe = async (openPos, flipped) => {
+
+  }
+
+  // Chooses a random position for pipes and spawn them at the right off screen
+  spawnPipes = () => {
+    // Flags each off screen pipe as dead for recycling
+    this.pipes.forEachAlive(pipe => {
+      if (pipe.size && pipe.x + pipe.width < this.scene.bounds.left) {
+        if (pipe.name === 'top') {
+          this.deadPipeTops.push(pipe.kill());
+        }
+        if (pipe.name === 'bottom') {
+          this.deadPipeBottoms.push(pipe.kill());
+        }
+      }
+    })
+
+    // Gives a random spot for the center between two pipes
+    const pipe = 
+      this.scene.size.height / 2 +
+      (Math.random() - 0.5) * this.scene.size.height * 0.2;
+
+    this.spawnPipe(pipeY);
+    this.spawnPipe(pipeY, true);
+  };
+
   onSetup = async ({ scene }) => {
     // Give us global reference to the scene
     // Then the scene can be called by any other function
     this.scene = scene;
+    this.scene.add(this.pipes);
     await this.setupBackground();
     await this.setupPlayer();
   };
@@ -49,12 +88,12 @@ export default class Game extends React.Component {
       height: 26,
     };
 
-    // Creates a sprite with animation
-    // tilesHoriz: How many tiles across (3)
-    // tilesVert: Tiles vertical (1)
-    // numTiles: Total tiles (3)
-    // tilesDispDuration: Display duration
-    // Size defined previously
+    /* Creates a sprite with animation
+       tilesHoriz: How many tiles across (3)
+       tilesVert: Tiles vertical (1)
+       numTiles: Total tiles (3)
+       tilesDispDuration: Display duration
+       Size defined previously */
     const sprite = new Sprite();
     await sprite.setup({
       image: Files.sprites.bird,
