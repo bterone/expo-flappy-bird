@@ -103,7 +103,7 @@ export default class Game extends React.Component {
     })
 
     // Gives a random spot for the center between two pipes
-    const pipe = 
+    const pipeY = 
       this.scene.size.height / 2 +
       (Math.random() - 0.5) * this.scene.size.height * 0.2;
 
@@ -185,11 +185,30 @@ export default class Game extends React.Component {
     return node;
   };
 
+  addScore = () => {
+
+  }
+
   gameStarted = false;
 
   updateGame = delta => {
     if (this.gameStarted) {
-      // To be continued
+      if (!this.gameOver) {
+        // Iterates over all pipes and moves them left
+        this.pipes.forEachAlive(pipe => {
+          pipe.x += pipe.velocity;
+
+          // If user passed pipe, it adds to score
+          if (
+              pipe.name === "bottom" &&
+              !pipe.passed &&
+              pipe.x < this.player.x
+              ) {
+              pipe.passed = true;
+              this.addScore();
+          }
+        });
+      }
     } else {
       this.player.update(delta);
       this.player.y = 8 * Math.cos(Date.now() / 200);
