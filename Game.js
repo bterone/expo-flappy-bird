@@ -26,10 +26,66 @@ export default class Game extends React.Component {
 
   // Seeing if we should spawn a pipe or recycle
   setupPipe = async ({ key, y }) => {
+    const size = {
+      width: 52,
+      height: 320,
+    };
+  
+    // Defining the dictionary for the images
+    const tbs = {
+      top: Files.sprites.pipe_top,
+      bottom: Files.sprites.pipe_bottom,
+    };
+    const pipe = await this.setupStaticNode({
+      image: tbs[key],
+      size,
+      name: key,
+    });
 
+    // Giving a pipe a reference to size
+    pipe.size = size;
+    pipe.y = y;
+  
+    return pipe;
   }
+
   spawnPipe = async (openPos, flipped) => {
 
+    // Getting random positions for pipes
+    let pipeY;
+    if (flipped) {
+      pipeY = Math.floor(openPos - OPENING / 2 - 320);
+    } else {
+      pipeY = Math.floor(openPos + OPENING / 2);
+    }
+
+    // Determining whether pipe is top or bottom based on input variable
+    let pipeKey = flipped ? 'bottom' : 'top';
+    let pipe;
+
+    // Setting the initial position of the pipe off screen
+    const end = this.scene.bounds.right + 26;
+
+    // Checking dead pipes for repositoning
+    if (this.deadPipeTops.length > 0 && pipeKey === 'top') {
+      pipe = this.deadPipeTops.pop().revive();
+      pipe.reset(end, pipeY);
+    } else if (this.deadPipeBottoms.length > 0 && pipeKey === 'bottom') {
+      pipe = this.deadPipeBottoms.pop().revive();
+      pipe.reset(end, pipeY);
+    } else {
+
+      // If there aren't any dead pipes, create new ones
+      pipe = await this.setupPipe({
+        y: pipeY,
+        key: pipeKey,
+      });
+      pipe.x = end;
+      this.pipes.add(pipe);
+    }
+    // Set the pipes velocity so it knows how fast to go
+    pipe.velocity = -SPEED;
+    return pipe;
   }
 
   // Chooses a random position for pipes and spawn them at the right off screen
@@ -141,12 +197,21 @@ export default class Game extends React.Component {
     }
   };
 
+  tap = () => {
+    // Tapping to start the game
+    if (!this.gameStarted) {
+        this.gameStarted = true;
+        // 2
+        this.pillarInterval = setInterval(this.spawnPipes, SPAWN_RATE);
+    }
+  }
+
   render() {
     //@(Evan Bacon) This is a dope SpriteView based on SpriteKit that surfaces touches, render, and setup!
     return (
       <View style={StyleSheet.absoluteFill}>
         <SpriteView
-          touchDown={({ x, y }) => {}}
+          touchDown={({ x, y }) => this.tap()}
           touchMoved={({ x, y }) => {}}
           touchUp={({ x, y }) => {}}
           update={this.updateGame}
