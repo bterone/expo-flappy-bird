@@ -193,6 +193,10 @@ export default class Game extends React.Component {
 
   updateGame = delta => {
     if (this.gameStarted) {
+
+      // Adding delta * GRAVITY to velocity
+      this.velocity -= GRAVITY * delta;
+
       if (!this.gameOver) {
         // Iterates over all pipes and moves them left
         this.pipes.forEachAlive(pipe => {
@@ -209,6 +213,19 @@ export default class Game extends React.Component {
           }
         });
       }
+
+      // Adjusts the bird's rotation in radians
+      this.player.angle = Math.min(
+        Math.PI / 4,
+        Math.max(-Math.PI / 2, (FLAP + this.velocity) / FLAP)
+      );
+
+      // Adds an instance of bird flapping animation during play
+      this.player.update(delta);
+
+      // Applies velocity to bird
+      this.player.y += this.velocity * delta;
+
     } else {
       this.player.update(delta);
       this.player.y = 8 * Math.cos(Date.now() / 200);
@@ -216,12 +233,24 @@ export default class Game extends React.Component {
     }
   };
 
+  reset = () => {
+
+  }
+
+  velocity = 0;
+
   tap = () => {
     // Tapping to start the game
     if (!this.gameStarted) {
-        this.gameStarted = true;
-        // 2
-        this.pillarInterval = setInterval(this.spawnPipes, SPAWN_RATE);
+      this.gameStarted = true;
+      // Building a timer to spawn pipes
+      this.pillarInterval = setInterval(this.spawnPipes, SPAWN_RATE);
+    }
+    
+    if (!this.gameOver) {
+      this.velocity = FLAP;
+    } else {
+      this.reset();
     }
   }
 
