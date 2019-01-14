@@ -117,6 +117,7 @@ export default class Game extends React.Component {
     this.scene = scene;
     this.scene.add(this.pipes);
     await this.setupBackground();
+    await this.setupGround();
     await this.setupPlayer();
   };
 
@@ -134,6 +135,43 @@ export default class Game extends React.Component {
 
     // Adds background to scene
     scene.add(bg);
+  };
+
+  setupGround = async () => {
+    const { scene } = this;
+    const size = {
+      width: scene.size.width,
+      height: scene.size.width * 0.333333333
+    };
+    this.groundNode = new Group();
+
+    // Looping the ground as they go off screen using two copies
+    const node = await this.setupStaticNode({
+      image: Files.sprites.ground,
+      size,
+      name: "ground"
+    });
+
+    const nodeB = await this.setupStaticNode({
+      image: Files.sprites.ground,
+      size,
+      name: "ground"
+    });
+    nodeB.x = size.width; // adds x to nodeB with the screen's width???
+
+    this.groundNode.add(node);
+    this.groundNode.add(nodeB);
+
+    // Setting the groundNode group's location to appear at the bottom of the screen
+    this.groundNode.position.y =
+    (scene.size.height + (size.height - GROUND_HEIGHT)) * -0.5;
+
+    // Save a reference to the top of the ground for collision purposes
+    this.groundNode.top = this.groundNode.position.y + size.height / 2;
+
+    // Moving the ground on the z-axis so it appears on top of pipes
+    this.groundNode.position.z = 0.01;
+    scene.add(this.groundNode);
   };
 
   setupPlayer = async () => {
@@ -212,7 +250,26 @@ export default class Game extends React.Component {
               this.addScore();
           }
         });
-      }
+
+        // Only moves the floor when the player is alive
+        this.groundNode.children.map((node, index) => {
+
+          // Moving the floor at the same speed as the rest of the world
+          node.x -= SPEED;
+          
+          // If the child ground node is off screen then use the next child ground node to show on screen
+          if (node.x < this.scene.size.width * -1) {
+            let nextIndex = index + 1;
+            if (nextIndex === this.groundNode.children.length) {
+              nextIndex = 0;
+            }
+            const nextNode = this.groundNode.children[nextIndex];
+
+            // Get the position of the last node and move the current node behind it
+            node.x = nextNode.x + this.scene.size.width - 1.55;
+          }
+        })
+      };
 
       // Adjusts the bird's rotation in radians
       this.player.angle = Math.min(
@@ -248,8 +305,10 @@ export default class Game extends React.Component {
     }
     
     if (!this.gameOver) {
+      // If the game is not over, the player's velocity is set to the constant
       this.velocity = FLAP;
     } else {
+      // At game end, it resets
       this.reset();
     }
   }
