@@ -229,15 +229,36 @@ export default class Game extends React.Component {
 
   gameStarted = false;
 
+  setGameOver = () => {
+    // Toggles gameover to true and stops pipes from spawning
+    this.gameOver = true;
+    clearInterval(this.pillarInterval);
+  }
+
   updateGame = delta => {
     if (this.gameStarted) {
 
       // Adding delta * GRAVITY to velocity
       this.velocity -= GRAVITY * delta;
 
+      const target = this.groundNode.top;
+
       if (!this.gameOver) {
+
+        // Creates the collision box for bird
+        const playerBox = new THREE.Box3().setFromObject(this.player);
+
         // Iterates over all pipes and moves them left
         this.pipes.forEachAlive(pipe => {
+
+          // Creates the collision box for pipes
+          const pipeBox = new THREE.Box3().setFromObject(pipe);
+
+          // Checks if user has collided with any pipes
+          if (pipeBox.intersectsBox(playerBox)) {
+            this.setGameOver();
+          }
+
           pipe.x += pipe.velocity;
 
           // If user passed pipe, it adds to score
@@ -268,8 +289,13 @@ export default class Game extends React.Component {
             // Get the position of the last node and move the current node behind it
             node.x = nextNode.x + this.scene.size.width - 1.55;
           }
-        })
-      };
+        });
+
+        // Causes gameover if bird is lower or at the floor
+        if (this.player.y <= target) {
+          this.setGameOver();
+        }
+      }// End of if NOT GAMEOVER;
 
       // Adjusts the bird's rotation in radians
       this.player.angle = Math.min(
@@ -283,15 +309,22 @@ export default class Game extends React.Component {
       // Applies velocity to bird
       this.player.y += this.velocity * delta;
 
+      // During a gameover, bird continues to fall to the floor
+      if (this.player.y <= target) {
+        this.player.angle = -Math.PI / 2;
+        this.player.y = target;
+        this.velocity = 0;
+      }
+
     } else {
       this.player.update(delta);
       this.player.y = 8 * Math.cos(Date.now() / 200);
       this.player.angle = 0
-    }
+    }// End of if GAME STARTED else
   };
 
   reset = () => {
-
+    // NEED TO INSERT RESET GAME CODE HERE
   }
 
   velocity = 0;
