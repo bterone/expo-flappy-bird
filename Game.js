@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Files from "./Files";
 import * as THREE from "three"; // 0.88.0
 import Expo from "expo";
@@ -119,6 +119,7 @@ export default class Game extends React.Component {
     await this.setupBackground();
     await this.setupGround();
     await this.setupPlayer();
+    this.reset();
   };
 
   setupBackground = async () => {
@@ -223,10 +224,6 @@ export default class Game extends React.Component {
     return node;
   };
 
-  addScore = () => {
-
-  }
-
   gameStarted = false;
 
   setGameOver = () => {
@@ -323,9 +320,16 @@ export default class Game extends React.Component {
     }// End of if GAME STARTED else
   };
 
+  // Resets the game back to its initial state
   reset = () => {
-    // NEED TO INSERT RESET GAME CODE HERE
-  }
+    this.gameStarted = false;
+    this.gameOver = false;
+    this.setState({ score: 0});
+
+    this.player.reset(this.scene.size.width * -0.3, 0);
+    this.player.angle = 0;
+    this.pipes.removeAll();
+  };
 
   velocity = 0;
 
@@ -346,6 +350,31 @@ export default class Game extends React.Component {
     }
   }
 
+  state = {
+    score: 0
+  };
+
+  addScore = () => {
+    this.setState({ score: this.state.score + 1});
+    console.log(this.state.score);
+  };
+
+  renderScore = () => {
+    <Text
+        style={{
+          textAlign: "center",
+          fontSize: 64,
+          position: "absolute",
+          left: 0,
+          right: 0,
+          color: "white",
+          top: 64,
+          backgroundColor: "transparent"
+        }}>
+        {this.state.score}
+        </Text>
+  };
+
   render() {
     //@(Evan Bacon) This is a dope SpriteView based on SpriteKit that surfaces touches, render, and setup!
     return (
@@ -357,6 +386,7 @@ export default class Game extends React.Component {
           update={this.updateGame}
           onSetup={this.onSetup}
         />
+        {this.renderScore()}
       </View>
     );
   }
