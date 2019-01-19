@@ -119,6 +119,8 @@ export default class Game extends React.Component {
     await this.setupBackground();
     await this.setupGround();
     await this.setupPlayer();
+
+    // Resets after finish setting up scene, keeps a consistant state
     this.reset();
   };
 
@@ -230,6 +232,7 @@ export default class Game extends React.Component {
     // Toggles gameover to true and stops pipes from spawning
     this.gameOver = true;
     clearInterval(this.pillarInterval);
+    this.audio.hit();
   }
 
   updateGame = delta => {
@@ -344,22 +347,27 @@ export default class Game extends React.Component {
     if (!this.gameOver) {
       // If the game is not over, the player's velocity is set to the constant
       this.velocity = FLAP;
+      this.audio.wing();
     } else {
       // At game end, it resets
       this.reset();
     }
   }
 
+  // Defines components state and gives a property "score" of zero
   state = {
     score: 0
   };
 
+  // Increments score by one whenever called
   addScore = () => {
     this.setState({ score: this.state.score + 1});
-    console.log(this.state.score);
+    // console.log(this.state.score);
+    this.audio.point();
   };
 
-  renderScore = () => {
+  // Defines what the score label will look like
+  renderScore = () => (
     <Text
         style={{
           textAlign: "center",
@@ -373,6 +381,43 @@ export default class Game extends React.Component {
         }}>
         {this.state.score}
         </Text>
+  );
+
+  // Because audio isn't dependent on GL View
+  componentDidMount() {
+    this.setupAudio();
+  }
+
+  setupAudio = async () => {
+    // Defines how audio is used in the game
+    Expo.Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      interruptionModeIOS: Expo.Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: true,
+      interruptionModeAndroid: Expo.Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX
+    });
+
+    // Parse preloaded audio and create a helper object for playing sounds
+    this.audio = {};
+    Object.keys(Files.audio).map(async key => {
+      const res = Files.audio[key];
+      const { sound } = await Expo.Audio.Sound.create(res);
+      await sound.setStatusAsync({
+        volume: 1
+      });
+
+      this.audio[key] = async () => {
+        // This will restart the sound and play it
+        try {
+          await sound.setPositionAsync(0);
+          await sound.playAsync();
+        }
+        catch (error) {
+          console.warn("SOUND ERROR: ", { error });
+        }
+      };
+    });
   };
 
   render() {
